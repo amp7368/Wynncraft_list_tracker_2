@@ -1,0 +1,9 @@
+number,number,number # The theme color in R,G,B
+number # The bot's id
+number # The test_bot's id
+login # the login for the bot
+login # the login for the test_bot
+number # The id of the begin channel (to send the !begin command)
+number # The id of the debug person to send error reports to
+number # The respects channel to send "F" if anything goes wrong
+          # replace fields with the corresponding data
