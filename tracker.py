@@ -177,7 +177,11 @@ async def resend_messages():
                 if missings[client_id][list_name]['reactions']:
                     await add_reactions(missings[client_id][list_name])
             except (discord.errors.NotFound, discord.errors.Forbidden):
-                missings.__delitem__(list_name)
+                try:
+                    missings.__delitem__(list_name)
+                except KeyError:
+                    # already gone
+                    pass
                 write()
                 continue
             except:
@@ -193,7 +197,11 @@ async def resend_messages():
                 if charts[client_id][list_name]['reactions']:
                     await add_reactions(charts[client_id][list_name])
             except (discord.errors.NotFound, discord.errors.Forbidden):
-                missings.__delitem__(list_name)
+                try:
+                    missings.__delitem__(list_name)
+                except KeyError:
+                    # already gone
+                    pass
                 write()
                 continue
             except:
@@ -204,14 +212,18 @@ async def end(message):
     write()
     for client_id in missings:
         for list_name in list(missings[client_id].keys()):
-            await missings[client_id][list_name]['message'].channel.delete_messages(
-                [missings[client_id][list_name]['message']])
-
+            try:
+                await missings[client_id][list_name]['message'].channel.delete_messages(
+                    [missings[client_id][list_name]['message']])
+            except (discord.errors.NotFound, discord.errors.Forbidden):
+                pass
     for client_id in charts:
         for list_name in list(charts[client_id].keys()):
-            await charts[client_id][list_name]['message'].channel.delete_messages(
-                [charts[client_id][list_name]['message']])
-
+            try:
+                await charts[client_id][list_name]['message'].channel.delete_messages(
+                    [charts[client_id][list_name]['message']])
+            except (discord.errors.NotFound, discord.errors.Forbidden):
+                pass
     begun[0] = False
     await message.channel.send("ended")
 
@@ -231,7 +243,11 @@ async def collect_chart(client_id, list_name, terrs_now):
         await charts[client_id][list_name]["message"].edit(
             content=make_chart(lst_final, entries_per_page * charts[client_id][list_name]["page"], len(lst)))
     except (discord.errors.NotFound, discord.errors.Forbidden):
-        charts.__delitem__(list_name)
+        try:
+            charts.__delitem__(list_name)
+        except KeyError:
+            # already gone
+            pass
         write()
         return
     # add reactions
@@ -282,7 +298,11 @@ async def collect_missings(client_id, list_name, terrs_now):
         await missings[client_id][list_name]["message"].edit(
             content=make_missing(lst_final, missings[client_id][list_name]['page'] * entries_per_page, len(missing)))
     except (discord.errors.NotFound, discord.errors.Forbidden):
-        charts.__delitem__(list_name)
+        try:
+            charts.__delitem__(list_name)
+        except KeyError:
+            # already gone
+            pass
         write()
         return
 
@@ -331,7 +351,7 @@ async def collect_alerts(client_id, list_name, terrs_now):
             alerts[client_id][list_name]["safe"] = False
             try:
                 await alerts[client_id][list_name]["channel"].send(
-                    alerts[client_id][list_name]['role'][1:] + " you're not safe in "  + list_name +"!")
+                    alerts[client_id][list_name]['role'][1:] + " you're not safe in " + list_name + "!")
             except:
                 pass
     else:
@@ -822,7 +842,11 @@ async def on_command_remove(message):
             return
         list_name = " ".join(msgs[2:])
         if list_name in charts[str(message.author.id)]:
-            charts[str(message.author.id)].__delitem__(list_name)
+            try:
+                charts[str(message.author.id)].__delitem__(list_name)
+            except KeyError:
+                # already gone
+                pass
             try:
                 await message.channel.send(list_name + " removed from charts")
             except:
@@ -839,7 +863,11 @@ async def on_command_remove(message):
             return
         list_name = " ".join(msgs[2:])
         if list_name in missings[str(message.author.id)]:
-            missings[str(message.author.id)].__delitem__(list_name)
+            try:
+                missings[str(message.author.id)].__delitem__(list_name)
+            except KeyError:
+                # already gone
+                pass
             try:
                 await message.channel.send(list_name + " removed from missing")
             except:
@@ -856,7 +884,11 @@ async def on_command_remove(message):
             return
         list_name = " ".join(msgs[2:])
         if list_name in exchanges[str(message.author.id)]:
-            exchanges[str(message.author.id)].__delitem__(list_name)
+            try:
+                exchanges[str(message.author.id)].__delitem__(list_name)
+            except KeyError:
+                # already gone
+                pass
             try:
                 await message.channel.send(list_name + " removed from exchanges")
             except:
@@ -873,7 +905,11 @@ async def on_command_remove(message):
             return
         list_name = " ".join(msgs[2:])
         if list_name in alerts[str(message.author.id)]:
-            alerts[str(message.author.id)].__delitem__(list_name)
+            try:
+                alerts[str(message.author.id)].__delitem__(list_name)
+            except KeyError:
+                # already gone
+                pass
             try:
                 await message.channel.send(list_name + " removed from alerts")
             except:
@@ -887,8 +923,11 @@ async def on_command_remove(message):
     else:
         list_name = ' '.join(msgs[2:])
         if list_name in lists[str(message.author.id)]:
-            lists[str(message.author.id)].__delitem__(list_name)
-
+            try:
+                lists[str(message.author.id)].__delitem__(list_name)
+            except KeyError:
+                # already gone
+                pass
             try:
                 await message.channel.send(list_name + " removed from lists")
             except:
@@ -1058,7 +1097,7 @@ async def correct_command_start(channel):
     :return:
     '''
     try:
-        await channel.send(prefix + "start (chart/missing/territories/alerts/full_missing)")
+        await channel.send(prefix + "start (chart/missing/exchanges/alerts/full_missing)")
 
     except:
         pass
@@ -1071,7 +1110,7 @@ async def correct_command_remove(channel):
     :return:
     '''
     try:
-        await channel.send(prefix + "remove (chart/missing/territories/alert) <list name>")
+        await channel.send(prefix + "remove (chart/missing/exchanges/alert) <list name>")
 
     except:
         pass
@@ -1216,7 +1255,11 @@ async def read():
                                 await asyncio.sleep(5)
                                 continue
                             except:
-                                charts[client_id].__delitem__(list_name)
+                                try:
+                                    charts[client_id].__delitem__(list_name)
+                                except KeyError:
+                                    # already gone
+                                    pass
                             break
             elif count == 2:
                 for client_id in loaded:
@@ -1231,7 +1274,11 @@ async def read():
                                 await asyncio.sleep(5)
                                 continue
                             except:
-                                charts[client_id].__delitem__(list_name)
+                                try:
+                                    charts[client_id].__delitem__(list_name)
+                                except KeyError:
+                                    # already gone
+                                    pass
                             break
             elif count == 3:
                 for client_id in loaded:
